@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/sms_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SMS"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:drawableStart="@drawable/ic_sms"
+        android:drawablePadding="10dp"/>
+
+    <TextView
+        android:id="@+id/apps_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Otras aplicaciones"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:drawableStart="@drawable/ic_share"
+        android:drawablePadding="10dp"/>
+
+</LinearLayout>
