@@ -9,9 +9,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
@@ -42,6 +41,15 @@ class StartFragment : Fragment(), OnMapReadyCallback {
         viewModel.startCurrentPositionListener(requireActivity())
         viewModel.locationLiveEvent.observe(
             viewLifecycleOwner, androidx.lifecycle.Observer {
+                val cameraUpdate = CameraUpdateFactory.newCameraPosition(
+                    CameraPosition(
+                        LatLng(
+                            it.latitude,
+                            it.longitude
+                        ), 15.0f, 0f, 0f
+                    )
+                )
+                googleMap.animateCamera(cameraUpdate)
                 showCurrentPosition(it)
             }
         )
@@ -90,12 +98,12 @@ class StartFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setupRemoveMarkerOptions() {
-        parkButton.setText(getString(R.string.unpark_label))
+        parkButton.text = getString(R.string.unpark_label)
         share_button.visibility = View.VISIBLE
     }
 
     private fun setupSaveMarkerOptions() {
-        parkButton.setText(getString(R.string.park_label))
+        parkButton.text = getString(R.string.park_label)
         share_button.visibility = View.GONE
     }
 
@@ -103,10 +111,12 @@ class StartFragment : Fragment(), OnMapReadyCallback {
         map?.apply {
             val retrievedLocation = viewModel.getSavedLocation()
             isMyLocationEnabled = true
+            isBuildingsEnabled = true
             googleMap = this
             retrievedLocation?.apply {
                 savedLocation = retrievedLocation
                 addMapMarker()
+                setupRemoveMarkerOptions()
             }
         }
     }
