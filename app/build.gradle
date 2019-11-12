@@ -8,6 +8,7 @@ android {
     defaultConfig {
         applicationId "com.everis.myparking"
         minSdkVersion 21
+        flavorDimensions "default"
         targetSdkVersion 29
         versionCode 1
         versionName "1.0.0"
@@ -17,6 +18,18 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    productFlavors{
+        dev{
+            versionNameSuffix 'dev'
+            applicationId = 'com.everis.myparking.dev'
+            resValue "string","FLAVOR_APP_NAME", "DEV MyParking"
+        }
+        pro{
+            versionNameSuffix 'pro'
+            applicationId = 'com.everis.myparking'
+            resValue "string","FLAVOR_APP_NAME", "MyParking"
         }
     }
     compileOptions {
@@ -53,6 +66,8 @@ dependencies {
     implementation 'androidx.navigation:navigation-ui-ktx:2.2.0-rc01'
 
     //Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.6.1'
+    implementation 'com.squareup.retrofit2:converter-gson:2.6.1'
 
     //Room
 

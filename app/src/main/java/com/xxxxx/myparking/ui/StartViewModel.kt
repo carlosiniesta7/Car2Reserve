@@ -2,28 +2,59 @@ package com.xxxxx.myparking.ui
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.content.Context.LOCATION_SERVICE
 import android.location.Location
 import android.location.LocationManager
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
-import com.xxxxx.myparking.MainActivity
-import com.xxxxx.myparking.Repository
+import com.xxxxx.myparking.repositories.Repository
 import com.xxxxx.myparking.base.LiveEvent
+import com.xxxxx.myparking.repositories.ParkingService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class StartViewModel (application: Application): AndroidViewModel(application){
+class StartViewModel (application: Application, parkingService: ParkingService): AndroidViewModel(application){
 
     private val context = getApplication<Application>().applicationContext
-    private val repository = Repository(context)
+    private val repository = Repository(parkingService,
+        context.getSharedPreferences("locationPreferences", Context.MODE_PRIVATE))
 
     val locationLiveEvent = LiveEvent<Location>()
+    val positionLiveEvent = LiveEvent<Location>()
     private lateinit var locationManager: LocationManager
 
-    fun saveLocation() = repository.saveLocation(locationLiveEvent.value)
-    fun saveLocation(latLng: LatLng) = repository.saveLocation(latLng)
-    fun getSavedLocation():Location? = repository.getSavedLocation()
-    fun removeLocation() = repository.removeLocation()
+    fun saveLocation() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.saveLocation(locationLiveEvent.value)
+        }
+    }
+
+    fun saveLocation(latLng: LatLng) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.saveLocation(latLng)
+        }
+    }
+    fun getSavedLocation() {
+
+        viewModelScope.launch {
+            val response = withContext(Dispatchers.IO) {
+                repository.getSavedLocation()
+            }
+            positionLiveEvent.postValue(response)
+        }
+    }
+
+    fun removeLocation() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.removeLocation()
+        }
+    }
 
     fun startCurrentPositionListener(activity: Activity){
         locationManager = context.getSystemService(LOCATION_SERVICE) as LocationManager
@@ -37,5 +68,13 @@ class StartViewModel (application: Application): AndroidViewModel(application){
 
         }
     }
+}
 
+class StartViewModelFactory(private val application: Application,
+                            private val parkingService: ParkingService): ViewModelProvider.Factory {
+
+    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        return modelClass.getConstructor(Application::class.java, ParkingService::class.java)
+            .newInstance(application, parkingService)
+    }
 }

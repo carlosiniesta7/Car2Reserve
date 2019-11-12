@@ -11,12 +11,15 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.xxxxx.myparking.BuildConfig
+import com.xxxxx.myparking.MainActivity
 import com.xxxxx.myparking.R
 import kotlinx.android.synthetic.main.button_group_component.*
 import kotlinx.android.synthetic.main.start_fragment.*
@@ -41,7 +44,11 @@ class StartFragment : Fragment(), OnMapReadyCallback {
     }
 
     fun setupViewModel() {
-        viewModel = ViewModelProvider(this).get(StartViewModel::class.java)
+        val factory = StartViewModelFactory(
+            activity!!.application,
+            (activity as MainActivity).getServiceInstance()
+        )
+        viewModel = ViewModelProvider(this, factory).get(StartViewModel::class.java)
         viewModel.startCurrentPositionListener(requireActivity())
         viewModel.locationLiveEvent.observe(
             viewLifecycleOwner, androidx.lifecycle.Observer {
@@ -55,6 +62,16 @@ class StartFragment : Fragment(), OnMapReadyCallback {
                 )
                 googleMap.animateCamera(cameraUpdate)
                 showCurrentPosition(it)
+            }
+        )
+        viewModel.positionLiveEvent.observe(
+            viewLifecycleOwner, Observer { location ->
+                if (location != null && googleMap != null) {
+                    Log.d("MYPARKING", "Recibida localizacion: ${location.latitude},${location.longitude}")
+                    savedLocation = location
+                    addMapMarker()
+                    setupRemoveMarkerOptions()
+                }
             }
         )
     }
@@ -72,7 +89,12 @@ class StartFragment : Fragment(), OnMapReadyCallback {
 
     private fun initListeners() {
         buttonGroup.rightButtonSetOnClickListener(View.OnClickListener {
-            Toast.makeText(context, "COMPARTIR", Toast.LENGTH_LONG).show()
+//            if (BuildConfig.FLAVOR == "dev"){
+//                Toast.makeText(context, "DEV COMPARTIR", Toast.LENGTH_LONG).show()
+//            }else {
+//                Toast.makeText(context, "COMPARTIR", Toast.LENGTH_LONG).show()
+//            }
+//            Toast.makeText(context, Constant.URL, Toast.LENGTH_LONG).show()
         })
 
         buttonGroup.leftButtonSetOnClickListener(View.OnClickListener{
@@ -131,15 +153,10 @@ class StartFragment : Fragment(), OnMapReadyCallback {
 
     override fun onMapReady(map: GoogleMap?) {
         map?.apply {
-            val retrievedLocation = viewModel.getSavedLocation()
+            viewModel.getSavedLocation()
             isMyLocationEnabled = true
             isBuildingsEnabled = true
             googleMap = this
-            retrievedLocation?.apply {
-                savedLocation = retrievedLocation
-                addMapMarker()
-                setupRemoveMarkerOptions()
-            }
         }
     }
 

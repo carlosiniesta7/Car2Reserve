@@ -3,6 +3,7 @@ package com.xxxxx.myparking.base
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import com.xxxxx.myparking.R
@@ -21,7 +22,20 @@ class ButtonGroupComponent @JvmOverloads constructor(
             val color = ContextCompat.getColor(context,typedArray.getResourceId(R.styleable.ButtonGroupComponent_buttonBackgroundColor,R.color.colorAccent))
             leftButton.setBackgroundColor(color)
             rightButton.setBackgroundColor(color)
+
+            val leftVisibility = typedArray.getBoolean(R.styleable.ButtonGroupComponent_leftButtonVisibility,true)
+            val rightVisibility = typedArray.getBoolean(R.styleable.ButtonGroupComponent_rightButtonVisibility,true)
+
+            applyVisibility(leftButton,leftVisibility)
+            applyVisibility(rightButton,rightVisibility)
         }
+    }
+
+    private fun applyVisibility(view: View, visible: Boolean){
+        if (visible)
+            view.visibility = View.VISIBLE
+        else
+            view.visibility = View.GONE
     }
 
     fun leftButtonSetOnClickListener (clickListener: OnClickListener){
