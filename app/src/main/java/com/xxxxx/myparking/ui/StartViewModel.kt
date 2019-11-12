@@ -12,8 +12,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
-import com.xxxxx.myparking.repositories.Repository
+import com.xxxxx.myparking.BuildConfig
+import com.xxxxx.myparking.repositories.RemoteRepository
 import com.xxxxx.myparking.base.LiveEvent
+import com.xxxxx.myparking.repositories.LocalRepository
 import com.xxxxx.myparking.repositories.ParkingService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,22 +24,25 @@ import kotlinx.coroutines.withContext
 class StartViewModel (application: Application, parkingService: ParkingService): AndroidViewModel(application){
 
     private val context = getApplication<Application>().applicationContext
-    private val repository = Repository(parkingService,
-        context.getSharedPreferences("locationPreferences", Context.MODE_PRIVATE))
+    private val repository = if (BuildConfig.FLAVOR == "pro")
+        RemoteRepository(parkingService)
+    else
+        LocalRepository(context.getSharedPreferences("locationPreferences", Context.MODE_PRIVATE))
 
-    val locationLiveEvent = LiveEvent<Location>()
-    val positionLiveEvent = LiveEvent<Location>()
-    val errorLiveEvent = LiveEvent<String>()
+    private var location: Location = Location("")
+    val stateLiveEvent = LiveEvent<StartFragmentState>()
     private lateinit var locationManager: LocationManager
 
-    fun saveLocation() {
+    fun saveLocation(): LatLng {
         viewModelScope.launch {
             val success = withContext(Dispatchers.IO) {
-                repository.saveLocation(locationLiveEvent.value)
+                repository.saveLocation(location)
 
             }
-            if (!success) errorLiveEvent.postValue("Ha ocurrido un error")
+            if (!success) stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
         }
+
+        return LatLng(location.latitude, location.longitude)
     }
 
     fun saveLocation(latLng: LatLng) {
@@ -46,7 +51,7 @@ class StartViewModel (application: Application, parkingService: ParkingService):
                 repository.saveLocation(latLng)
 
             }
-            if (!success) errorLiveEvent.postValue("Ha ocurrido un error")
+            if (!success) stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
         }
     }
     fun getSavedLocation() {
@@ -56,9 +61,9 @@ class StartViewModel (application: Application, parkingService: ParkingService):
                 repository.getSavedLocation()
             }
             if (response == null || (response.latitude == 0.0 && response.longitude == 0.0)) {
-                errorLiveEvent.postValue("Ha ocurrido un error")
+                stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
             } else {
-                positionLiveEvent.postValue(response)
+                stateLiveEvent.postValue(StartFragmentState.PositionState(response))
             }
         }
     }
@@ -68,7 +73,7 @@ class StartViewModel (application: Application, parkingService: ParkingService):
             val success = withContext(Dispatchers.IO) {
                 repository.removeLocation()
             }
-            if (!success) errorLiveEvent.postValue("Ha ocurrido un error")
+            if (!success) stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
         }
     }
 
@@ -79,11 +84,26 @@ class StartViewModel (application: Application, parkingService: ParkingService):
             val location = it.result
 
             location?.let {
-                locationLiveEvent.value = it
+                this.location = it
+                stateLiveEvent.value = StartFragmentState.LocationUpdateState(it)
             }
 
         }
     }
+}
+
+sealed class StartFragmentState () {
+    data class LocationUpdateState (
+        val location: Location
+    ): StartFragmentState()
+
+    data class PositionState (
+        val location: Location
+    ): StartFragmentState()
+
+    data class ErrorState (
+        val error: String
+    ): StartFragmentState()
 }
 
 class StartViewModelFactory(private val application: Application,

@@ -51,33 +51,36 @@ class StartFragment : Fragment(), OnMapReadyCallback {
         )
         viewModel = ViewModelProvider(this, factory).get(StartViewModel::class.java)
         viewModel.startCurrentPositionListener(requireActivity())
-        viewModel.locationLiveEvent.observe(
-            viewLifecycleOwner, androidx.lifecycle.Observer {
-                val cameraUpdate = CameraUpdateFactory.newCameraPosition(
-                    CameraPosition(
-                        LatLng(
-                            it.latitude,
-                            it.longitude
-                        ), 15.0f, 0f, 0f
-                    )
-                )
-                googleMap.animateCamera(cameraUpdate)
-                showCurrentPosition(it)
-            }
-        )
-        viewModel.positionLiveEvent.observe(
-            viewLifecycleOwner, Observer { location ->
-                if (location != null && googleMap != null) {
-                    Log.d("MYPARKING", "Recibida localizacion: ${location.latitude},${location.longitude}")
-                    savedLocation = location
-                    addMapMarker()
-                    setupRemoveMarkerOptions()
-                }
-            }
-        )
-        viewModel.errorLiveEvent.observe(
+
+        viewModel.stateLiveEvent.observe(
             viewLifecycleOwner, Observer {
-                Snackbar.make(requireView(), it, Snackbar.LENGTH_LONG).show()
+                when(it) {
+                    is StartFragmentState.LocationUpdateState -> {
+                        val cameraUpdate = CameraUpdateFactory.newCameraPosition(
+                            CameraPosition(
+                                LatLng(
+                                    it.location.latitude,
+                                    it.location.longitude
+                                ), 15.0f, 0f, 0f
+                            )
+                        )
+                        googleMap.animateCamera(cameraUpdate)
+                        showCurrentPosition(it.location)
+                    }
+                    is StartFragmentState.PositionState -> {
+                        if (googleMap != null) {
+                            Log.d("MYPARKING", "Recibida localizacion: ${it.location.latitude},${it.location.longitude}")
+                            savedLocation = it.location
+                            val latLng = LatLng(it.location.latitude, it.location.longitude)
+                            addMapMarker(latLng)
+                            setupRemoveMarkerOptions()
+                        }
+                    }
+                    is StartFragmentState.ErrorState -> {
+                        Snackbar.make(requireView(), it.error, Snackbar.LENGTH_LONG).show()
+
+                    }
+                }
             }
         )
     }
@@ -111,8 +114,8 @@ class StartFragment : Fragment(), OnMapReadyCallback {
                 setUnparkMode()
             } else {
                 // APARCAR MODE
-                viewModel.saveLocation()
-                setParkMode()
+                val location = viewModel.saveLocation()
+                setParkMode(location)
             }
         })
     }
@@ -123,8 +126,8 @@ class StartFragment : Fragment(), OnMapReadyCallback {
 
     }
 
-    private fun setParkMode() {
-        addMapMarker()
+    private fun setParkMode(location: LatLng) {
+        addMapMarker(location)
         setupRemoveMarkerOptions()
     }
 
@@ -166,26 +169,17 @@ class StartFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    fun addMapMarker() {
-        savedLocation?.let {
-            val latLng = LatLng(it.latitude, it.longitude)
-            marker =
-                googleMap.addMarker(MarkerOptions().position(latLng).title(getString(R.string.your_car)))
-        } ?: kotlin.run {
-            viewModel.locationLiveEvent.value?.let {
-                val latLng = LatLng(it.latitude, it.longitude)
-                marker =
-                    googleMap.addMarker(MarkerOptions().position(latLng).title(getString(R.string.your_car)))
-                savedLocation = it
-            }
-        }
+    fun addMapMarker(location: LatLng) {
+
+        marker =
+            googleMap.addMarker(MarkerOptions().position(location).title(getString(R.string.your_car)))
         marker.isDraggable = true
         googleMap.setOnMarkerDragListener(object : GoogleMap.OnMarkerDragListener {
             override fun onMarkerDragEnd(p0: Marker?) {
                 p0?.let {
                     viewModel.removeLocation()
                     viewModel.saveLocation(LatLng(p0.position.latitude, p0.position.longitude))
-                    addMapMarker()
+                    addMapMarker(p0.position)
                     marker.remove()
                     marker = p0
                 }

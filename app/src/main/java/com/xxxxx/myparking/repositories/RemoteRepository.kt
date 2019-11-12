@@ -1,24 +1,23 @@
 package com.xxxxx.myparking.repositories
 
-import android.content.SharedPreferences
 import android.location.Location
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.xxxxx.myparking.models.SaveParkingRequest
 
-class Repository(private val parkingService: ParkingService, private val sharedPrefs: SharedPreferences) {
+class RemoteRepository(private val parkingService: ParkingService) : IRepository {
 
     companion object {
         private const val USER = "4321"
     }
-    suspend fun saveLocation(location: Location?): Boolean {
+    override suspend fun saveLocation(location: Location?): Boolean {
         return location?.let {
             val latLng = LatLng(it.latitude, it.longitude)
             saveLocation(latLng)
         } ?: false
     }
 
-    suspend fun saveLocation(latLng: LatLng?): Boolean {
+    override suspend fun saveLocation(latLng: LatLng?): Boolean {
         Log.d("posicion a guardar", "" + latLng?.latitude + " " + latLng?.longitude)
         latLng?.let {
             return try {
@@ -34,17 +33,11 @@ class Repository(private val parkingService: ParkingService, private val sharedP
             }catch (e: Exception) {
                 false
             }
-
-
-            /*sharedPrefs.edit().apply {
-                putString("latitude", it.latitude.toString())
-                putString("longitude", it.longitude.toString())
-            }.apply()*/
         } ?: return false
 
     }
 
-    suspend fun getSavedLocation(): Location? {
+    override suspend fun getSavedLocation(): Location? {
 
         return try {
             val response = parkingService.getParkingSpot(USER)
@@ -61,22 +54,9 @@ class Repository(private val parkingService: ParkingService, private val sharedP
         } catch (e: Exception) {
             null
         }
-
-        /*val location = Location("")
-        val latitude = sharedPrefs.getString("latitude", "INVALID")
-        val longitude = sharedPrefs.getString("longitude", "INVALID")
-
-        if (latitude == "INVALID" || longitude == "INVALID") {
-            return null
-        } else {
-            location.latitude = latitude?.toDouble() ?: 0.0
-            location.longitude = longitude?.toDouble() ?: 0.0
-        }
-
-        return location*/
     }
 
-    suspend fun removeLocation(): Boolean {
+    override suspend fun removeLocation(): Boolean {
 
         return try {
             val response = parkingService.deleteParkingSpot(USER)
@@ -84,10 +64,5 @@ class Repository(private val parkingService: ParkingService, private val sharedP
         } catch (e: Exception) {
             false
         }
-
-        /*sharedPrefs.edit().apply {
-            remove("latitude")
-            remove("longitude")
-        }.apply()*/
     }
 }
