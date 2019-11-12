@@ -2,11 +2,14 @@ package com.xxxxx.myparking.ui
 
 import android.location.Location
 import android.os.Bundle
+import android.transition.Transition
+import android.transition.TransitionManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.maps.*
@@ -15,6 +18,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.xxxxx.myparking.R
+import kotlinx.android.synthetic.main.button_group_component.*
 import kotlinx.android.synthetic.main.start_fragment.*
 
 class StartFragment : Fragment(), OnMapReadyCallback {
@@ -67,11 +71,11 @@ class StartFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun initListeners() {
-        share_button.setOnClickListener {
+        buttonGroup.rightButtonSetOnClickListener(View.OnClickListener {
             Toast.makeText(context, "COMPARTIR", Toast.LENGTH_LONG).show()
-        }
+        })
 
-        parkButton.setOnClickListener {
+        buttonGroup.leftButtonSetOnClickListener(View.OnClickListener{
             if (savedLocation != null) {
                 // DESAPARCAR MODE
                 viewModel.removeLocation()
@@ -82,8 +86,7 @@ class StartFragment : Fragment(), OnMapReadyCallback {
                 viewModel.saveLocation()
                 setParkMode()
             }
-
-        }
+        })
     }
 
     private fun setUnparkMode() {
@@ -97,14 +100,33 @@ class StartFragment : Fragment(), OnMapReadyCallback {
         setupRemoveMarkerOptions()
     }
 
+    private fun attachButtonTo(position:Int){
+        TransitionManager.beginDelayedTransition(buttonGroup)
+
+        // DESAPARCAR Y COMPARTIR VISIBLES
+
+        val constraintSet= ConstraintSet()
+        constraintSet.clone(container)
+
+        constraintSet.clear(R.id.buttonGroup,ConstraintSet.TOP)
+        constraintSet.clear(R.id.buttonGroup,ConstraintSet.BOTTOM)
+
+        constraintSet.connect(R.id.buttonGroup,position,ConstraintSet.PARENT_ID,position)
+        constraintSet.applyTo(container)
+    }
+
     private fun setupRemoveMarkerOptions() {
-        parkButton.text = getString(R.string.unpark_label)
-        share_button.visibility = View.VISIBLE
+        //DESAPARCAR Y COMPARTIR VISIBLES
+        attachButtonTo(ConstraintSet.BOTTOM)
+        buttonGroup.leftButtonSetText(getString(R.string.unpark_label))
+        buttonGroup.rightButtonSetVisibility(View.VISIBLE)
     }
 
     private fun setupSaveMarkerOptions() {
-        parkButton.text = getString(R.string.park_label)
-        share_button.visibility = View.GONE
+        // APARCAR
+        attachButtonTo(ConstraintSet.TOP)
+        buttonGroup.leftButtonSetText(getString(R.string.park_label))
+        buttonGroup.rightButtonSetVisibility(View.GONE)
     }
 
     override fun onMapReady(map: GoogleMap?) {

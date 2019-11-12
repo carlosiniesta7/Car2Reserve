@@ -29,16 +29,15 @@
             android:id="@+id/tvBigLetter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            style="@style/bigLetter"
             android:text="P"
-            android:textColor="@android:color/white"
-            android:textSize="180dp" />
+             />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
-            android:textColor="@android:color/white"
-            android:textSize="80dp"
+            style="@style/smallLetter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

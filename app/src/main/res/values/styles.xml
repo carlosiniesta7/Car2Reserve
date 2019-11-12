@@ -11,4 +11,12 @@
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
     </style>
 
+    <style name="bigLetter">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">180sp</item>
+    </style>
+
+    <style name="smallLetter" parent="bigLetter">
+        <item name="android:textSize">50sp</item>
+    </style>
 </resources>
