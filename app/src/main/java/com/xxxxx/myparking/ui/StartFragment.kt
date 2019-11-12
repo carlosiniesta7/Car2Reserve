@@ -18,6 +18,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.snackbar.Snackbar
 import com.xxxxx.myparking.BuildConfig
 import com.xxxxx.myparking.MainActivity
 import com.xxxxx.myparking.R
@@ -72,6 +73,11 @@ class StartFragment : Fragment(), OnMapReadyCallback {
                     addMapMarker()
                     setupRemoveMarkerOptions()
                 }
+            }
+        )
+        viewModel.errorLiveEvent.observe(
+            viewLifecycleOwner, Observer {
+                Snackbar.make(requireView(), it, Snackbar.LENGTH_LONG).show()
             }
         )
     }

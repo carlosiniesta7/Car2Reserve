@@ -1,23 +1,21 @@
 package com.xxxxx.myparking.repositories
 
-import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.xxxxx.myparking.models.SaveParkingRequest
-import kotlinx.coroutines.delay
 
 class Repository(private val parkingService: ParkingService, private val sharedPrefs: SharedPreferences) {
 
     companion object {
         private const val USER = "4321"
     }
-    suspend fun saveLocation(location: Location?) {
-        location?.let {
+    suspend fun saveLocation(location: Location?): Boolean {
+        return location?.let {
             val latLng = LatLng(it.latitude, it.longitude)
             saveLocation(latLng)
-        }
+        } ?: false
     }
 
     suspend fun saveLocation(latLng: LatLng?): Boolean {

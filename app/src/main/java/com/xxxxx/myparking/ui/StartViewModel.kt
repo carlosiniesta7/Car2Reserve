@@ -27,17 +27,26 @@ class StartViewModel (application: Application, parkingService: ParkingService):
 
     val locationLiveEvent = LiveEvent<Location>()
     val positionLiveEvent = LiveEvent<Location>()
+    val errorLiveEvent = LiveEvent<String>()
     private lateinit var locationManager: LocationManager
 
     fun saveLocation() {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.saveLocation(locationLiveEvent.value)
+        viewModelScope.launch {
+            val success = withContext(Dispatchers.IO) {
+                repository.saveLocation(locationLiveEvent.value)
+
+            }
+            if (!success) errorLiveEvent.postValue("Ha ocurrido un error")
         }
     }
 
     fun saveLocation(latLng: LatLng) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.saveLocation(latLng)
+        viewModelScope.launch {
+            val success = withContext(Dispatchers.IO) {
+                repository.saveLocation(latLng)
+
+            }
+            if (!success) errorLiveEvent.postValue("Ha ocurrido un error")
         }
     }
     fun getSavedLocation() {
@@ -46,13 +55,20 @@ class StartViewModel (application: Application, parkingService: ParkingService):
             val response = withContext(Dispatchers.IO) {
                 repository.getSavedLocation()
             }
-            positionLiveEvent.postValue(response)
+            if (response == null || (response.latitude == 0.0 && response.longitude == 0.0)) {
+                errorLiveEvent.postValue("Ha ocurrido un error")
+            } else {
+                positionLiveEvent.postValue(response)
+            }
         }
     }
 
     fun removeLocation() {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.removeLocation()
+        viewModelScope.launch {
+            val success = withContext(Dispatchers.IO) {
+                repository.removeLocation()
+            }
+            if (!success) errorLiveEvent.postValue("Ha ocurrido un error")
         }
     }
 
