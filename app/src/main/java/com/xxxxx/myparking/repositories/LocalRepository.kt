@@ -4,16 +4,16 @@ import android.content.SharedPreferences
 import android.location.Location
 import com.google.android.gms.maps.model.LatLng
 
-class LocalRepository(private val sharedPrefs: SharedPreferences): IRepository {
+class LocalRepository(private val sharedPrefs: SharedPreferences) {
 
-    override suspend fun saveLocation(location: Location?): Boolean {
+    suspend fun saveList(location: Location?): Boolean {
         return location?.let {
             val latLng = LatLng(it.latitude, it.longitude)
             saveLocation(latLng)
         } ?: false
     }
 
-    override suspend fun saveLocation(latLng: LatLng?): Boolean {
+     suspend fun saveList(latLng: LatLng?): Boolean {
 
         return latLng?.let {
             sharedPrefs.edit().apply {
@@ -23,7 +23,7 @@ class LocalRepository(private val sharedPrefs: SharedPreferences): IRepository {
         } ?: false
     }
 
-    override suspend fun getSavedLocation(): Location? {
+     suspend fun getSavedLocation(): Location? {
         val location = Location("")
         val latitude = sharedPrefs.getString("latitude", "INVALID")
         val longitude = sharedPrefs.getString("longitude", "INVALID")
@@ -38,7 +38,7 @@ class LocalRepository(private val sharedPrefs: SharedPreferences): IRepository {
         return location
     }
 
-    override suspend fun removeLocation(): Boolean {
+     suspend fun removeLocation(): Boolean {
         return sharedPrefs.edit().apply {
             remove("latitude")
             remove("longitude")

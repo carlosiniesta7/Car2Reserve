@@ -3,50 +3,24 @@ package com.xxxxx.myparking.repositories
 import android.location.Location
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
-import com.xxxxx.myparking.models.SaveParkingRequest
+import com.xxxxx.myparking.models.BookCarBody
+import com.xxxxx.myparking.models.Cars
+import com.xxxxx.myparking.models.ReturnCarBody
+import com.xxxxx.myparking.models.ReturnCarResponse
 
-class RemoteRepository(private val parkingService: ParkingService) : IRepository {
+class RemoteRepository(private val carsService: CarsService) {
 
     companion object {
-        private const val USER = "4321"
-    }
-    override suspend fun saveLocation(location: Location?): Boolean {
-        return location?.let {
-            val latLng = LatLng(it.latitude, it.longitude)
-            saveLocation(latLng)
-        } ?: false
+        private const val userId = "4321"
     }
 
-    override suspend fun saveLocation(latLng: LatLng?): Boolean {
-        Log.d("posicion a guardar", "" + latLng?.latitude + " " + latLng?.longitude)
-        latLng?.let {
-            return try {
-                val response = parkingService.saveParkingSpot(
-                    SaveParkingRequest(
-                        USER,
-                        it.latitude,
-                        it.longitude
-                    )
-                )
-
-                response.isSuccessful && (response.body()?.success ?: false)
-            }catch (e: Exception) {
-                false
-            }
-        } ?: return false
-
-    }
-
-    override suspend fun getSavedLocation(): Location? {
-
+    suspend fun getAvailableCars(): List<Cars>? {
         return try {
-            val response = parkingService.getParkingSpot(USER)
+            val response = carsService.getCars()
 
             if (response.isSuccessful && (response.body()?.success ?: false)) {
-                Location("").apply {
-                    latitude = response.body()?.latitude ?: 0.0
-                    longitude = response.body()?.longitude ?: 0.0
-                }
+                response.body()?.cars!!
+
             } else {
                 null
             }
@@ -56,13 +30,24 @@ class RemoteRepository(private val parkingService: ParkingService) : IRepository
         }
     }
 
-    override suspend fun removeLocation(): Boolean {
-
+    //TODO: Tras reservar deberemos añadirlo a SharedPreferences
+    suspend fun bookCar(carId: Int): Boolean {
         return try {
-            val response = parkingService.deleteParkingSpot(USER)
+        val response = carsService.bookCars(BookCarBody(userId, carId))
+        response.isSuccessful && (response.body()?.success ?: false)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    //TODO: Tras devolver deberemos eliminarlo del SharedPreferences
+    suspend fun returnCar(carId: Int, latitude: Double, longitude: Double): Boolean {
+        return try {
+            val response = carsService.returnCar(ReturnCarBody(userId, carId, latitude, longitude))
             response.isSuccessful && (response.body()?.success ?: false)
         } catch (e: Exception) {
             false
         }
     }
+
 }

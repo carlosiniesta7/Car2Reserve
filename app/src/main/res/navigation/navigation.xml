@@ -26,19 +26,22 @@
         <action
             android:id="@+id/action_start_fragment_to_share_fragment"
             app:destination="@id/share_fragment" />
+        <action
+            android:id="@+id/action_start_fragment_to_contacts_fragment"
+            app:destination="@id/contacts_fragment" />
     </fragment>
 
     <dialog
         android:id="@+id/share_fragment"
-        android:name="com.xxxxx.myparking.ui.ShareFragment"
+        android:name="com.xxxxx.myparking.ui.InfoCarFragment"
         android:label="share"
         tools:layout="@layout/share_fragment">
-        <action
-            android:id="@+id/action_share_fragment_to_contacts_fragment"
-            app:destination="@id/contacts_fragment" />
         <argument
             android:name="share_text"
             app:argType="string"/>
+        <action
+            android:id="@+id/action_share_fragment_to_start_fragment"
+            app:destination="@id/start_fragment" />
     </dialog>
 
     <fragment
@@ -46,28 +49,10 @@
         android:name="com.xxxxx.myparking.ui.ContactsFragment"
         android:label="contacts"
         tools:layout="@layout/contacts_fragment">
-        <action
-            android:id="@+id/action_contacts_fragment_to_sms_fragment"
-            app:destination="@id/sms_fragment" />
 
         <argument
             android:name="share_text"
             app:argType="string"/>
     </fragment>
-
-    <dialog
-        android:id="@+id/sms_fragment"
-        android:name="com.xxxxx.myparking.ui.SendSmsFragment"
-        android:label="sms"
-        tools:layout="@layout/sendsms_fragment">
-
-        <argument
-            android:name="share_text"
-            app:argType="string"/>
-
-        <argument
-            android:name="share_contact"
-            app:argType="com.xxxxx.myparking.ui.Contact"/>
-    </dialog>
 
 </navigation>

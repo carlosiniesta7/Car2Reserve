@@ -16,12 +16,12 @@ import com.xxxxx.myparking.BuildConfig
 import com.xxxxx.myparking.repositories.RemoteRepository
 import com.xxxxx.myparking.base.LiveEvent
 import com.xxxxx.myparking.repositories.LocalRepository
-import com.xxxxx.myparking.repositories.ParkingService
+import com.xxxxx.myparking.repositories.CarsService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class StartViewModel (application: Application, parkingService: ParkingService): AndroidViewModel(application){
+class StartViewModel (application: Application, parkingService: CarsService): AndroidViewModel(application){
 
     private val context = getApplication<Application>().applicationContext
     private val repository = if (BuildConfig.FLAVOR == "pro")
@@ -49,7 +49,6 @@ class StartViewModel (application: Application, parkingService: ParkingService):
         viewModelScope.launch {
             val success = withContext(Dispatchers.IO) {
                 repository.saveLocation(latLng)
-
             }
             if (!success) stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
         }
@@ -107,10 +106,10 @@ sealed class StartFragmentState () {
 }
 
 class StartViewModelFactory(private val application: Application,
-                            private val parkingService: ParkingService): ViewModelProvider.Factory {
+                            private val parkingService: CarsService): ViewModelProvider.Factory {
 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        return modelClass.getConstructor(Application::class.java, ParkingService::class.java)
+        return modelClass.getConstructor(Application::class.java, CarsService::class.java)
             .newInstance(application, parkingService)
     }
 }

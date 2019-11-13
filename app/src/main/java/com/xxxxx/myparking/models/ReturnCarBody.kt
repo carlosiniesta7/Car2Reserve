@@ -1,8 +1,8 @@
 package com.xxxxx.myparking.models
 
-data class ParkingResponse (
-    val success: Boolean,
+data class ReturnCarBody (
     val userId: String,
+    val carId: Int,
     val latitude: Double,
     val longitude: Double
 )

@@ -4,13 +4,13 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.navigation.findNavController
 import androidx.navigation.ui.NavigationUI
-import com.xxxxx.myparking.repositories.ParkingService
+import com.xxxxx.myparking.repositories.CarsService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var service: ParkingService
+    private lateinit var service: CarsService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,14 +23,14 @@ class MainActivity : AppCompatActivity() {
         return NavigationUI.navigateUp(findNavController(R.id.container), null)
     }
 
-    fun getServiceInstance (): ParkingService {
+    fun getServiceInstance (): CarsService {
 
         if (!::service.isInitialized) {
             service = Retrofit.Builder()
-                .baseUrl("https://us-central1-correos-desarrollo.cloudfunctions.net/v1/myparking/")
+                .baseUrl("https://us-central1-correos-desarrollo.cloudfunctions.net/v1/car2reserve/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
-                .create(ParkingService::class.java)
+                .create(CarsService::class.java)
         }
         return service
     }

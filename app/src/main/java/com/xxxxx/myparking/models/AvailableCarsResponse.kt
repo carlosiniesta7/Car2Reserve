@@ -1,6 +1,6 @@
 package com.xxxxx.myparking.models
 
-data class BaseResponse (
+data class AvailableCarsResponse (
     val success: Boolean,
-    val error: String
+    val cars: List<Cars>
 )

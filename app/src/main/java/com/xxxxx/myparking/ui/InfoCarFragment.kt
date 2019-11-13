@@ -11,7 +11,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.xxxxx.myparking.R
 import kotlinx.android.synthetic.main.share_fragment.*
 
-class ShareFragment: BottomSheetDialogFragment() {
+class InfoCarFragment: BottomSheetDialogFragment() {
 
     private val args: ShareFragmentArgs by navArgs()
 
