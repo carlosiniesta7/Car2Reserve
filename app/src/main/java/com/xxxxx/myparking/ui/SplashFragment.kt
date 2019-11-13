@@ -21,8 +21,9 @@ class SplashFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val animation = AnimationUtils.loadAnimation(context,R.anim.rotate_animation)
-        volante.startAnimation(animation)
+        val animation = AnimationUtils.loadAnimation(context,R.anim.alpha_scale)
+        car2Reserv.startAnimation(animation)
+
 
         Handler().postDelayed({
             findNavController().navigate(SplashFragmentDirections.splashToStart())

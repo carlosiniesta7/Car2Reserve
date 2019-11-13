@@ -22,7 +22,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.xxxxx.myparking.BuildConfig
 import com.xxxxx.myparking.MainActivity
 import com.xxxxx.myparking.R
-import kotlinx.android.synthetic.main.button_group_component.*
 import kotlinx.android.synthetic.main.start_fragment.*
 
 class StartFragment : Fragment(), OnMapReadyCallback {
@@ -31,7 +30,6 @@ class StartFragment : Fragment(), OnMapReadyCallback {
     private lateinit var marker: Marker
     private lateinit var viewModel: StartViewModel
     lateinit var mapFragment: SupportMapFragment
-    var savedLocation: Location? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,6 +37,18 @@ class StartFragment : Fragment(), OnMapReadyCallback {
     ): View? {
         return inflater.inflate(R.layout.start_fragment, container, false)
     }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupViewModel()
+
+
+        mapFragment = childFragmentManager.findFragmentById(R.id.mapView) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+
+    }
+
 
     fun showCurrentPosition(location: Location) {
         Log.d("Position", location.latitude.toString() + "  " + location.longitude.toString())
@@ -55,114 +65,37 @@ class StartFragment : Fragment(), OnMapReadyCallback {
         viewModel.stateLiveEvent.observe(
             viewLifecycleOwner, Observer {
                 when(it) {
-                    is StartFragmentState.LocationUpdateState -> {
+                    is StartFragmentState.ListUpdateState -> {
                         val cameraUpdate = CameraUpdateFactory.newCameraPosition(
                             CameraPosition(
-                                LatLng(
-                                    it.location.latitude,
-                                    it.location.longitude
+                                LatLng(0.0, 0.0
                                 ), 15.0f, 0f, 0f
                             )
                         )
                         googleMap.animateCamera(cameraUpdate)
-                        showCurrentPosition(it.location)
+                        //showCurrentPosition()
                     }
-                    is StartFragmentState.PositionState -> {
+                    /*is StartFragmentState.PositionState -> {
                         if (googleMap != null) {
                             Log.d("MYPARKING", "Recibida localizacion: ${it.location.latitude},${it.location.longitude}")
                             savedLocation = it.location
                             val latLng = LatLng(it.location.latitude, it.location.longitude)
                             addMapMarker(latLng)
-                            setupRemoveMarkerOptions()
+
                         }
-                    }
+                    }*/
                     is StartFragmentState.ErrorState -> {
                         Snackbar.make(requireView(), it.error, Snackbar.LENGTH_LONG).show()
-
                     }
                 }
             }
         )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        setupViewModel()
-
-        mapFragment = childFragmentManager.findFragmentById(R.id.mapView) as SupportMapFragment
-        mapFragment.getMapAsync(this)
-
-        initListeners()
-    }
-
-    private fun initListeners() {
-        buttonGroup.rightButtonSetOnClickListener(View.OnClickListener {
-//            if (BuildConfig.FLAVOR == "dev"){
-//                Toast.makeText(context, "DEV COMPARTIR", Toast.LENGTH_LONG).show()
-//            }else {
-//                Toast.makeText(context, "COMPARTIR", Toast.LENGTH_LONG).show()
-//            }
-//            Toast.makeText(context, Constant.URL, Toast.LENGTH_LONG).show()
-        })
-
-        buttonGroup.leftButtonSetOnClickListener(View.OnClickListener{
-            if (savedLocation != null) {
-                // DESAPARCAR MODE
-                viewModel.removeLocation()
-                savedLocation = null
-                setUnparkMode()
-            } else {
-                // APARCAR MODE
-                val location = viewModel.saveLocation()
-                setParkMode(location)
-            }
-        })
-    }
-
-    private fun setUnparkMode() {
-        marker.remove()
-        setupSaveMarkerOptions()
-
-    }
-
-    private fun setParkMode(location: LatLng) {
-        addMapMarker(location)
-        setupRemoveMarkerOptions()
-    }
-
-    private fun attachButtonTo(position:Int){
-        TransitionManager.beginDelayedTransition(buttonGroup)
-
-        // DESAPARCAR Y COMPARTIR VISIBLES
-
-        val constraintSet= ConstraintSet()
-        constraintSet.clone(container)
-
-        constraintSet.clear(R.id.buttonGroup,ConstraintSet.TOP)
-        constraintSet.clear(R.id.buttonGroup,ConstraintSet.BOTTOM)
-
-        constraintSet.connect(R.id.buttonGroup,position,ConstraintSet.PARENT_ID,position)
-        constraintSet.applyTo(container)
-    }
-
-    private fun setupRemoveMarkerOptions() {
-        //DESAPARCAR Y COMPARTIR VISIBLES
-        attachButtonTo(ConstraintSet.BOTTOM)
-        buttonGroup.leftButtonSetText(getString(R.string.unpark_label))
-        buttonGroup.rightButtonSetVisibility(View.VISIBLE)
-    }
-
-    private fun setupSaveMarkerOptions() {
-        // APARCAR
-        attachButtonTo(ConstraintSet.TOP)
-        buttonGroup.leftButtonSetText(getString(R.string.park_label))
-        buttonGroup.rightButtonSetVisibility(View.GONE)
-    }
 
     override fun onMapReady(map: GoogleMap?) {
         map?.apply {
-            viewModel.getSavedLocation()
+            viewModel.getAvailableCars()
             isMyLocationEnabled = true
             isBuildingsEnabled = true
             googleMap = this
@@ -173,12 +106,11 @@ class StartFragment : Fragment(), OnMapReadyCallback {
 
         marker =
             googleMap.addMarker(MarkerOptions().position(location).title(getString(R.string.your_car)))
-        marker.isDraggable = true
+        marker.isDraggable = false
         googleMap.setOnMarkerDragListener(object : GoogleMap.OnMarkerDragListener {
             override fun onMarkerDragEnd(p0: Marker?) {
                 p0?.let {
-                    viewModel.removeLocation()
-                    viewModel.saveLocation(LatLng(p0.position.latitude, p0.position.longitude))
+                    //viewModel.saveLocation(LatLng(p0.position.latitude, p0.position.longitude))
                     addMapMarker(p0.position)
                     marker.remove()
                     marker = p0

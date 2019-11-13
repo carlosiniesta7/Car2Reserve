@@ -6,7 +6,7 @@ import com.google.android.gms.maps.model.LatLng
 
 class LocalRepository(private val sharedPrefs: SharedPreferences) {
 
-    suspend fun saveList(location: Location?): Boolean {
+    /*suspend fun saveList(location: Location?): Boolean {
         return location?.let {
             val latLng = LatLng(it.latitude, it.longitude)
             saveLocation(latLng)
@@ -43,5 +43,5 @@ class LocalRepository(private val sharedPrefs: SharedPreferences) {
             remove("latitude")
             remove("longitude")
         }.commit()
-    }
+    }*/
 }

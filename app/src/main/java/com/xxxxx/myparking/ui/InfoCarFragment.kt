@@ -1,6 +1,5 @@
 package com.xxxxx.myparking.ui
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +12,7 @@ import kotlinx.android.synthetic.main.share_fragment.*
 
 class InfoCarFragment: BottomSheetDialogFragment() {
 
-    private val args: ShareFragmentArgs by navArgs()
+    private val args: InfoCarFragmentArgs by navArgs()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -23,24 +22,12 @@ class InfoCarFragment: BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sms_text.setOnClickListener {
-            findNavController().navigate(ShareFragmentDirections
-                .actionShareFragmentToContactsFragment(args.shareText))
-        }
+        sms_text.text = args.carId
 
-        apps_text.setOnClickListener {
-            share (args.shareText)
-            findNavController().popBackStack()
+        book_button.setOnClickListener {
+            findNavController().navigate(InfoCarFragmentDirections.actionInfoCarFragmentToStartFragment())
+            //TODO: llamar al servicio bookCar
         }
     }
 
-    private fun share (text: String) {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-        }
-
-        context!!.startActivity(Intent.createChooser(intent, "Compartir"))
-
-    }
 }

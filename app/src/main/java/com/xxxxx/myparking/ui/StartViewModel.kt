@@ -15,65 +15,39 @@ import com.google.android.gms.maps.model.LatLng
 import com.xxxxx.myparking.BuildConfig
 import com.xxxxx.myparking.repositories.RemoteRepository
 import com.xxxxx.myparking.base.LiveEvent
+import com.xxxxx.myparking.models.Cars
 import com.xxxxx.myparking.repositories.LocalRepository
 import com.xxxxx.myparking.repositories.CarsService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class StartViewModel (application: Application, parkingService: CarsService): AndroidViewModel(application){
+class StartViewModel (application: Application, carsService: CarsService): AndroidViewModel(application){
 
     private val context = getApplication<Application>().applicationContext
-    private val repository = if (BuildConfig.FLAVOR == "pro")
-        RemoteRepository(parkingService)
-    else
-        LocalRepository(context.getSharedPreferences("locationPreferences", Context.MODE_PRIVATE))
+    private val remoteRepository =  RemoteRepository(carsService)
+    private val localRepository = LocalRepository(context.getSharedPreferences("locationPreferences", Context.MODE_PRIVATE))
 
     private var location: Location = Location("")
     val stateLiveEvent = LiveEvent<StartFragmentState>()
     private lateinit var locationManager: LocationManager
 
-    fun saveLocation(): LatLng {
-        viewModelScope.launch {
-            val success = withContext(Dispatchers.IO) {
-                repository.saveLocation(location)
 
-            }
-            if (!success) stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
-        }
-
-        return LatLng(location.latitude, location.longitude)
-    }
-
-    fun saveLocation(latLng: LatLng) {
-        viewModelScope.launch {
-            val success = withContext(Dispatchers.IO) {
-                repository.saveLocation(latLng)
-            }
-            if (!success) stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
-        }
-    }
-    fun getSavedLocation() {
-
+    fun getAvailableCars() {
         viewModelScope.launch {
             val response = withContext(Dispatchers.IO) {
-                repository.getSavedLocation()
+                remoteRepository.getAvailableCars()
             }
-            if (response == null || (response.latitude == 0.0 && response.longitude == 0.0)) {
+            if (response == null) {
                 stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
             } else {
-                stateLiveEvent.postValue(StartFragmentState.PositionState(response))
+                stateLiveEvent.postValue(StartFragmentState.ListUpdateState(response))
             }
         }
     }
 
-    fun removeLocation() {
-        viewModelScope.launch {
-            val success = withContext(Dispatchers.IO) {
-                repository.removeLocation()
-            }
-            if (!success) stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
-        }
+    fun getBookedCars(){
+        //TODO: llamada a SharedPrefereces
     }
 
     fun startCurrentPositionListener(activity: Activity){
@@ -84,20 +58,15 @@ class StartViewModel (application: Application, parkingService: CarsService): An
 
             location?.let {
                 this.location = it
-                stateLiveEvent.value = StartFragmentState.LocationUpdateState(it)
+                //stateLiveEvent.value = StartFragmentState.ListUpdateState()
             }
-
         }
     }
 }
 
 sealed class StartFragmentState () {
-    data class LocationUpdateState (
-        val location: Location
-    ): StartFragmentState()
-
-    data class PositionState (
-        val location: Location
+    data class ListUpdateState (
+        val carsList: List<Cars>
     ): StartFragmentState()
 
     data class ErrorState (
@@ -106,10 +75,10 @@ sealed class StartFragmentState () {
 }
 
 class StartViewModelFactory(private val application: Application,
-                            private val parkingService: CarsService): ViewModelProvider.Factory {
+                            private val carsService: CarsService): ViewModelProvider.Factory {
 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         return modelClass.getConstructor(Application::class.java, CarsService::class.java)
-            .newInstance(application, parkingService)
+            .newInstance(application, carsService)
     }
 }

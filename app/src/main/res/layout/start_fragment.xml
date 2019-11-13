@@ -13,14 +13,4 @@
         android:id="@+id/mapView"
         />
 
-    <com.xxxxx.myparking.base.ButtonGroupComponent
-        android:id="@+id/buttonGroup"
-        android:layout_width="0dp"
-        app:buttonBackgroundColor="@android:color/holo_orange_light"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,9 +17,9 @@ import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.contacts_fragment.*
 import kotlinx.android.synthetic.main.item_contact.view.*
 
-class ContactsFragment: Fragment() {
-
-    private val args: ContactsFragmentArgs by navArgs()
+class BookedCarsFragment: Fragment() {
+    /*
+    private val args: BookedCarsFragment by navArgs()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -71,7 +71,7 @@ class ContactsFragment: Fragment() {
         contacts_list.apply {
             this.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
             this.adapter = ContactsAdapter(contactList){
-                findNavController().navigate(ContactsFragmentDirections.actionContactsFragmentToSmsFragment(args.shareText,it))
+                findNavController()
             }
         }
 
@@ -101,7 +101,7 @@ class ContactsFragment: Fragment() {
                 containerView.contactPhone.text= contact.phoneNumber
             }
         }
-    }
+    }*/
 
 }
 
