@@ -20,18 +20,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    productFlavors{
-        dev{
-            versionNameSuffix 'dev'
-            applicationId = 'com.everis.myparking.dev'
-            resValue "string","FLAVOR_APP_NAME", "DEV MyParking"
-        }
-        pro{
-            versionNameSuffix 'pro'
-            applicationId = 'com.everis.myparking'
-            resValue "string","FLAVOR_APP_NAME", "MyParking"
-        }
-    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

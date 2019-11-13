@@ -24,7 +24,6 @@ class SplashFragment : Fragment() {
         val animation = AnimationUtils.loadAnimation(context,R.anim.alpha_scale)
         car2Reserv.startAnimation(animation)
 
-
         Handler().postDelayed({
             findNavController().navigate(SplashFragmentDirections.splashToStart())
         }, 4000)

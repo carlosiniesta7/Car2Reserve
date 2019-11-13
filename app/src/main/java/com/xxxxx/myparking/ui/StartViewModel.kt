@@ -16,6 +16,7 @@ import com.xxxxx.myparking.BuildConfig
 import com.xxxxx.myparking.repositories.RemoteRepository
 import com.xxxxx.myparking.base.LiveEvent
 import com.xxxxx.myparking.models.Cars
+import com.xxxxx.myparking.models.ReturnCarBody
 import com.xxxxx.myparking.repositories.LocalRepository
 import com.xxxxx.myparking.repositories.CarsService
 import kotlinx.coroutines.Dispatchers
@@ -46,8 +47,24 @@ class StartViewModel (application: Application, carsService: CarsService): Andro
         }
     }
 
-    fun getBookedCars(){
-        //TODO: llamada a SharedPrefereces
+    fun returnCar(carId: Int, location: Location) {
+        viewModelScope.launch {
+            val response = withContext(Dispatchers.IO) {
+                remoteRepository.returnCar(carId, location.latitude, location.longitude)
+            }
+            if (response) {
+                stateLiveEvent.postValue(StartFragmentState.ErrorState("Reserva finalizada correctamente"))
+            } else {
+                stateLiveEvent.postValue(StartFragmentState.ErrorState("Ha ocurrido un error"))
+            }
+        }
+    }
+    fun deleteBooked(){
+        localRepository.deleteBookedCar()
+    }
+
+    fun getBooked() : String?{
+        return localRepository.getBookedCar()
     }
 
     fun startCurrentPositionListener(activity: Activity){
@@ -58,15 +75,25 @@ class StartViewModel (application: Application, carsService: CarsService): Andro
 
             location?.let {
                 this.location = it
-                //stateLiveEvent.value = StartFragmentState.ListUpdateState()
+                stateLiveEvent.value = StartFragmentState.LocationState(it)
             }
         }
     }
+
 }
+
 
 sealed class StartFragmentState () {
     data class ListUpdateState (
         val carsList: List<Cars>
+    ): StartFragmentState()
+
+    data class LocationState (
+        val location: Location
+    ): StartFragmentState()
+
+    data class BookedCarState (
+        val car: String
     ): StartFragmentState()
 
     data class ErrorState (

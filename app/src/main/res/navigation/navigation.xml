@@ -24,9 +24,6 @@
         android:label="start"
         tools:layout="@layout/start_fragment">
         <action
-            android:id="@+id/action_start_fragment_to_contacts_fragment"
-            app:destination="@id/booked_cars_fragment" />
-        <action
             android:id="@+id/action_start_fragment_to_info_car_fragment"
             app:destination="@id/info_car_fragment" />
     </fragment>
@@ -44,11 +41,5 @@
             app:destination="@id/start_fragment" />
     </dialog>
 
-    <fragment
-        android:id="@+id/booked_cars_fragment"
-        android:name="com.xxxxx.myparking.ui.BookedCarsFragment"
-        android:label="contacts"
-        tools:layout="@layout/booked_cars_fragment">
-    </fragment>
 
 </navigation>

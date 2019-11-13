@@ -1,7 +1,9 @@
 package com.xxxxx.myparking.ui
 
+import android.app.AlertDialog
 import android.location.Location
 import android.os.Bundle
+import android.os.Handler
 import android.transition.Transition
 import android.transition.TransitionManager
 import android.util.Log
@@ -13,22 +15,26 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.google.android.gms.maps.*
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import com.xxxxx.myparking.BuildConfig
 import com.xxxxx.myparking.MainActivity
 import com.xxxxx.myparking.R
+import com.xxxxx.myparking.models.Cars
+import kotlinx.android.synthetic.main.info_car_fragment.*
 import kotlinx.android.synthetic.main.start_fragment.*
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.concurrent.fixedRateTimer
 
 class StartFragment : Fragment(), OnMapReadyCallback {
 
     private lateinit var googleMap: GoogleMap
     private lateinit var marker: Marker
     private lateinit var viewModel: StartViewModel
+    private  var currentLocation = Location("")
     lateinit var mapFragment: SupportMapFragment
 
     override fun onCreateView(
@@ -43,10 +49,33 @@ class StartFragment : Fragment(), OnMapReadyCallback {
 
         setupViewModel()
 
+        getCarsPeriod()
+
+        checkBookedButton()
 
         mapFragment = childFragmentManager.findFragmentById(R.id.mapView) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+    }
+
+    private fun getCarsPeriod() {
+        Handler().postDelayed({
+            viewModel.getAvailableCars()
+            viewModel.startCurrentPositionListener(requireActivity())
+            getCarsPeriod()
+        }, 30000)
+    }
+
+    private fun checkBookedButton() {
+        val carBooked = viewModel.getBooked()
+        if (carBooked == null) {
+            bookedButton.visibility = View.GONE
+        } else {
+            bookedButton.visibility = View.VISIBLE
+            bookedButton.setOnClickListener {
+                showDialogBookedCars(carBooked)
+            }
+        }
     }
 
 
@@ -66,24 +95,19 @@ class StartFragment : Fragment(), OnMapReadyCallback {
             viewLifecycleOwner, Observer {
                 when(it) {
                     is StartFragmentState.ListUpdateState -> {
-                        val cameraUpdate = CameraUpdateFactory.newCameraPosition(
-                            CameraPosition(
-                                LatLng(0.0, 0.0
-                                ), 15.0f, 0f, 0f
-                            )
-                        )
-                        googleMap.animateCamera(cameraUpdate)
-                        //showCurrentPosition()
-                    }
-                    /*is StartFragmentState.PositionState -> {
-                        if (googleMap != null) {
-                            Log.d("MYPARKING", "Recibida localizacion: ${it.location.latitude},${it.location.longitude}")
-                            savedLocation = it.location
-                            val latLng = LatLng(it.location.latitude, it.location.longitude)
-                            addMapMarker(latLng)
-
+                        val listCar = it.carsList
+                        for(car in listCar){
+                            addMapMarker(car)
                         }
-                    }*/
+                        Log.d("START FRAGMENT", "Numero de Coches Disponibles: ${listCar.size}")
+                        googleMap.setOnMarkerClickListener {
+                            findNavController().navigate(StartFragmentDirections.actionStartFragmentToInfoCarFragment(it.tag.toString()))
+                            true
+                        }
+                    }
+                    is StartFragmentState.LocationState -> {
+                        currentLocation = it.location
+                    }
                     is StartFragmentState.ErrorState -> {
                         Snackbar.make(requireView(), it.error, Snackbar.LENGTH_LONG).show()
                     }
@@ -99,27 +123,54 @@ class StartFragment : Fragment(), OnMapReadyCallback {
             isMyLocationEnabled = true
             isBuildingsEnabled = true
             googleMap = this
+            moveCamera()
         }
     }
 
-    fun addMapMarker(location: LatLng) {
+    private fun moveCamera() {
+        val cameraUpdate = CameraUpdateFactory.newCameraPosition(
+            CameraPosition(
+                LatLng(
+                    40.415511, -3.7095896
+                ), 15.0f, 0f, 0f
+            )
+        )
+        googleMap.animateCamera(cameraUpdate)
+    }
 
-        marker =
-            googleMap.addMarker(MarkerOptions().position(location).title(getString(R.string.your_car)))
+    fun addMapMarker(car: Cars) {
+
+        val location = LatLng(car.latitude, car.longitude)
+
+        marker = googleMap.addMarker(MarkerOptions().position(location).title(getString(R.string.your_car)))
+
+        when(car.carType)  {
+            1 ->  marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+            2 -> marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+            else -> marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+        }
+
         marker.isDraggable = false
-        googleMap.setOnMarkerDragListener(object : GoogleMap.OnMarkerDragListener {
-            override fun onMarkerDragEnd(p0: Marker?) {
-                p0?.let {
-                    //viewModel.saveLocation(LatLng(p0.position.latitude, p0.position.longitude))
-                    addMapMarker(p0.position)
-                    marker.remove()
-                    marker = p0
-                }
-            }
+        marker.tag = car.carId.toString()
+    }
 
-            override fun onMarkerDragStart(p0: Marker?) {}
-            override fun onMarkerDrag(p0: Marker?) {}
-        })
+
+    fun showDialogBookedCars(carId: String) {
+        val items = arrayOf(carId)
+        val selectedList = ArrayList<Int>()
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle("Cancelar reserva")
+        builder.setMessage("¿Quieres devolver el coche " + carId + "?")
+
+        builder.setPositiveButton("Ok") { dialogInterface, i ->
+            viewModel.returnCar(carId.toInt(), currentLocation)
+            viewModel.deleteBooked()
+            checkBookedButton()
+        }
+
+        val dialog = builder.create()
+        viewModel.getAvailableCars()
+        dialog.show()
     }
 
 }

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <declare-styleable name="ButtonGroupComponent">
-        <attr name="buttonBackgroundColor" format="color" />
-        <attr name="leftButtonVisibility" format="boolean"/>
-        <attr name="rightButtonVisibility" format="boolean" />
-    </declare-styleable>
-
-</resources>

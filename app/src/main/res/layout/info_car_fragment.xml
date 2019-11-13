@@ -16,7 +16,7 @@
         android:drawablePadding="10dp"/>
 
     <Button
-        android:id="@+id/apps_text"
+        android:id="@+id/book_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
